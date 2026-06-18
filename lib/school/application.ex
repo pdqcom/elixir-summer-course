@@ -9,6 +9,7 @@ defmodule School.Application do
   def start(_type, _args) do
     children = [
       {Phoenix.PubSub, name: School.PubSub},
+      School.State,
       # Start a worker by calling: School.Worker.start_link(arg)
       # {School.Worker, arg},
       # Start to serve requests, typically the last entry
