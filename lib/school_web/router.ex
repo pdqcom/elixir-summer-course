@@ -15,13 +15,8 @@ defmodule SchoolWeb.Router do
   end
 
   scope "/", SchoolWeb do
-    pipe_through :browser
+    pipe_through([:browser])
 
-    get "/", PageController, :home
+    live("/", MainLive)
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", SchoolWeb do
-  #   pipe_through :api
-  # end
 end

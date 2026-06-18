@@ -21,7 +21,7 @@ if System.get_env("PHX_SERVER") do
 end
 
 config :school, SchoolWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "9000"))]
+  http: [port: String.to_integer(System.get_env("PORT", "9001"))]
 
 if config_env() == :prod do
   # The secret key base is used to sign/encrypt cookies and other secrets.

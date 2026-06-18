@@ -4,10 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
-    <.live_title default="School" suffix=" · Phoenix Framework">
+    <.live_title default="Summer" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Special+Elite&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
     <script>
@@ -31,6 +36,58 @@
     </script>
   </head>
   <body>
+    <.flash_group flash={@flash} />
     {@inner_content}
+    <script>
+      window.addEventListener("phx:swipe-left", (e) => {
+        const approveBtn = document.querySelector('.btn-approve');
+        const declineBtn = document.querySelector('.btn-decline');
+        const packageCard = document.querySelector('.package-card');
+
+        packageCard.classList.add('swipe-left-anim');
+
+        packageCard.addEventListener('animationend', () => {
+          packageCard.classList.add('card-hidden');
+        }, { once: true });
+      });
+
+      window.addEventListener("phx:timer-tick", (e) => {
+        const fill = document.querySelector('.card-timer-fill');
+        const seconds = document.querySelector('.card-timer-seconds');
+
+        if (fill) fill.style.width = e.detail.width + "%";
+        if (seconds) seconds.textContent = e.detail.time + "s";
+      });
+
+      window.addEventListener("phx:swipe-right", (e) => {
+        const approveBtn = document.querySelector('.btn-approve');
+        const declineBtn = document.querySelector('.btn-decline');
+        const packageCard = document.querySelector('.package-card');
+
+          packageCard.classList.add('swipe-right-anim');
+
+          packageCard.addEventListener('animationend', () => {
+            packageCard.classList.add('card-hidden');
+          }, { once: true});
+      });
+
+      window.addEventListener("phx:reset-package-card", (e) => {
+      const packageCard = document.querySelector('.package-card');
+
+      // 1. Remove the animation classes so the card "snaps" back to center (invisible)
+      packageCard.classList.remove('swipe-right-anim', 'swipe-left-anim', 'card-hidden');
+      packageCard.classList.remove('swipe-left-anim', 'swipe-right-anim', 'card-hidden');
+
+      // 2. Optional: Trigger a subtle "Fade In" or "Pop" so the new data doesn't just blink in
+        packageCard.style.opacity = "0";
+        packageCard.style.transform = "scale(0.95)";
+
+        requestAnimationFrame(() => {
+        packageCard.style.transition = "all 0.3s ease-out";
+        packageCard.style.opacity = "1";
+        packageCard.style.transform = "scale(1)";
+        });
+      });
+    </script>
   </body>
 </html>
