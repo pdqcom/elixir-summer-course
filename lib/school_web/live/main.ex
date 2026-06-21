@@ -3,6 +3,7 @@ defmodule SchoolWeb.MainLive do
 
   alias School.Logic
   alias School.State
+  alias School.Player
 
   import SchoolWeb.GameComponents
 
@@ -14,26 +15,41 @@ defmodule SchoolWeb.MainLive do
 
     new_socket =
       socket
-      |> assign(:local_player, true)
+      |> assign(:local_player, %Player{})
       |> assign(:package, package)
       |> assign(:timestamp, nil)
-      |> assign(:validation_result, nil)
+      |> assign(:validation_result, :correct)
       |> assign(:game_state, :in_progress)
       |> assign(:rule_descriptions, [])
+      |> assign(:score, 0)
 
     {:ok, new_socket}
   end
 
   @impl true
   def handle_event("approve", _params, socket) do
-    new_socket = validation("swipe-right", socket)
+    package = socket.assigns.package
+    {new_score, decision} = School.State.update_player_score(package, :invalid)
+
+    new_socket =
+      "swipe-right"
+      |> validation(socket)
+      |> assign(:score, new_score)
+      |> assign(:validation_result, decision)
 
     {:noreply, new_socket}
   end
 
   @impl true
   def handle_event("decline", _params, socket) do
-    new_socket = validation("swipe-left", socket)
+    package = socket.assigns.package
+    {new_score, decision} = School.State.update_player_score(package, :valid)
+
+    new_socket =
+      "swipe-left"
+      |> validation(socket)
+      |> assign(:score, new_score)
+      |> assign(:validation_result, decision)
 
     {:noreply, new_socket}
   end

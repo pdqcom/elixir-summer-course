@@ -1,6 +1,9 @@
 defmodule School.State do
   use GenServer
 
+  alias School.Player
+  alias School.Logic
+
   @max_active_rules 5
   @available_rules [
     :rule1,
@@ -15,7 +18,8 @@ defmodule School.State do
     :rule10
   ]
 
-  defstruct active_rules: []
+  defstruct active_rules: [],
+            player: %Player{}
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
@@ -34,6 +38,10 @@ defmodule School.State do
     GenServer.call(__MODULE__, :get_active_rules)
   end
 
+  def update_player_score(package, expected) do
+    GenServer.call(__MODULE__, {:update_player_score, package, expected})
+  end
+
   @impl true
   def handle_cast(:set_random_rule, state) do
     new_state = maybe_activate_random_rule(state)
@@ -44,6 +52,30 @@ defmodule School.State do
   @impl true
   def handle_call(:get_active_rules, _from, state) do
     {:reply, state.active_rules, state}
+  end
+
+  @impl true
+  def handle_call({:update_player_score, package, expected}, _from, state) do
+    {validation_result, _validation_msg} =
+      Logic.validate(package, state.active_rules)
+
+    player = state.player
+
+    decision =
+      if validation_result == expected,
+        do: :correct,
+        else: :incorrect
+
+    score_delta =
+      if decision == :correct, do: 1, else: -1
+
+    new_score = max(player.score + score_delta, 0)
+
+    updated_player = Map.put(player, :score, new_score)
+
+    new_state = Map.put(state, :player, updated_player)
+
+    {:reply, {new_score, decision}, new_state}
   end
 
   defp maybe_activate_random_rule(state) do

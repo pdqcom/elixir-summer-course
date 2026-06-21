@@ -146,6 +146,8 @@ defmodule School.Logic do
     end
   end
 
+  defp validate_rule9(_package), do: {:valid, "rule9"}
+
   defp validate_rule10(%{
          type: :fragile,
          destination: :international,
