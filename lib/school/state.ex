@@ -17,7 +17,7 @@ defmodule School.State do
     :rule9,
     :rule10
   ]
-  @max_game_time_seconds 30
+  @max_game_time_seconds 240
 
   defstruct active_rules: [],
             players: [],
@@ -29,12 +29,15 @@ defmodule School.State do
 
   @impl true
   def init(state) do
-    Process.send(self(), :tick, [])
     {:ok, state}
   end
 
-  def add_player(pid) do
-    GenServer.call(__MODULE__, {:add_player, pid})
+  def add_player(name, pid) do
+    GenServer.call(__MODULE__, {:add_player, name, pid})
+  end
+
+  def player_ready(name) do
+    GenServer.call(__MODULE__, {:player_ready, name})
   end
 
   def set_random_rule do
@@ -50,10 +53,26 @@ defmodule School.State do
   end
 
   @impl true
-  def handle_cast(:set_random_rule, state) do
-    new_state = maybe_activate_random_rule(state)
+  def handle_call({:player_ready, name}, _from, state) do
+    {[player], remaining_players} =
+      Enum.split_with(state.players, fn player -> player.name == name end)
 
-    {:noreply, new_state}
+    readied_player = Map.put(player, :ready?, true)
+    updated_player_list = [readied_player | remaining_players]
+    game_state = maybe_start_game(updated_player_list)
+
+    new_state =
+      state
+      |> Map.put(:players, updated_player_list)
+      |> Map.put(:game_state, game_state)
+
+    Phoenix.PubSub.broadcast(
+      School.PubSub,
+      "game_room",
+      {:update_player_list, sort_by_score(updated_player_list)}
+    )
+
+    {:reply, {readied_player, game_state}, new_state}
   end
 
   @impl true
@@ -97,12 +116,12 @@ defmodule School.State do
   end
 
   @impl true
-  def handle_call({:add_player, pid}, _from, state) do
+  def handle_call({:add_player, name, pid}, _from, state) do
     Process.monitor(pid)
 
     new_player = %Player{
       pid: pid,
-      name: inspect(pid)
+      name: name
     }
 
     updated_player_list = [new_player | state.players]
@@ -115,6 +134,13 @@ defmodule School.State do
     )
 
     {:reply, new_player, new_state}
+  end
+
+  @impl true
+  def handle_cast(:set_random_rule, state) do
+    new_state = maybe_activate_random_rule(state)
+
+    {:noreply, new_state}
   end
 
   @impl true
@@ -201,5 +227,23 @@ defmodule School.State do
 
   defp sort_by_score(player_list) do
     Enum.sort(player_list, fn p1, p2 -> p1.score > p2.score end)
+  end
+
+  defp maybe_start_game(player_list) do
+    all_ready? = Enum.all?(player_list, fn player -> player.ready? end)
+
+    if all_ready? do
+      Phoenix.PubSub.broadcast(
+        School.PubSub,
+        "game_room",
+        {:game_start, :in_progress}
+      )
+
+      Process.send_after(self(), :tick, 1_000)
+
+      :in_progress
+    else
+      :waiting
+    end
   end
 end

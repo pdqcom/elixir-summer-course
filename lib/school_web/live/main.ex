@@ -3,7 +3,6 @@ defmodule SchoolWeb.MainLive do
 
   alias School.Logic
   alias School.State
-  alias School.Player
 
   import SchoolWeb.GameComponents
 
@@ -16,17 +15,13 @@ defmodule SchoolWeb.MainLive do
     active_rules = State.get_active_rules()
     rule_descriptions = Logic.descriptions_by_rules(active_rules)
 
-    if connected?(socket) do
-      State.add_player(self())
-    end
-
     new_socket =
       socket
-      |> assign(:local_player, %Player{})
+      |> assign(:local_player, nil)
       |> assign(:package, package)
       |> assign(:timestamp, nil)
       |> assign(:validation_result, :correct)
-      |> assign(:game_state, :in_progress)
+      |> assign(:game_state, :waiting)
       |> assign(:active_rules, active_rules)
       |> assign(:rule_descriptions, rule_descriptions)
       |> assign(:score, 0)
@@ -36,14 +31,37 @@ defmodule SchoolWeb.MainLive do
   end
 
   @impl true
-  def handle_event("approve", _params, socket) do
-    new_socket = validation("swipe-left", :invalid, socket)
+  def handle_event("join", %{"name" => name}, socket) do
+    local_player = State.add_player(name, self())
+
+    new_socket =
+      socket
+      |> assign(:local_player, local_player)
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
+  def handle_event("ready", _params, socket) do
+    local_player = socket.assigns.local_player
+    {updated_local_player, _game_state} = State.player_ready(local_player.name)
+
+    new_socket =
+      socket
+      |> assign(:local_player, updated_local_player)
 
     {:noreply, new_socket}
   end
 
   @impl true
   def handle_event("decline", _params, socket) do
+    new_socket = validation("swipe-left", :invalid, socket)
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
+  def handle_event("approve", _params, socket) do
     new_socket = validation("swipe-right", :valid, socket)
 
     {:noreply, new_socket}
@@ -57,6 +75,15 @@ defmodule SchoolWeb.MainLive do
       socket
       |> assign(:package, package)
       |> push_event("reset-package-card", %{})
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
+  def handle_info({:game_start, game_state}, socket) do
+    new_socket =
+      socket
+      |> assign(:game_state, game_state)
 
     {:noreply, new_socket}
   end
