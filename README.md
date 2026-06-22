@@ -1,5 +1,14 @@
 # School
 
+## Setup
+
+1. Install [mise](https://mise.jdx.dev/getting-started.html)
+   - Be sure to follow the [activate mise](https://mise.jdx.dev/getting-started.html#activate-mise) section and restart your shell when done
+2. Verify install `mise --version`
+3. Use `mise install` to install all necessary runtime tools
+
+## Start Project
+
 To start your Phoenix server:
 
 * Run `mix setup` to install and setup dependencies
