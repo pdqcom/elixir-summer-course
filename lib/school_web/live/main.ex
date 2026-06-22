@@ -62,6 +62,15 @@ defmodule SchoolWeb.MainLive do
   end
 
   @impl true
+  def handle_info({:game_ended, game_state}, socket) do
+    new_socket =
+      socket
+      |> assign(:game_state, game_state)
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
   def handle_info({:tick_update, current_game_time}, socket) do
     width = build_game_time_loading_bar(current_game_time)
 
