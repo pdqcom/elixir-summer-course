@@ -1,9 +1,11 @@
 defmodule School.Player do
   @type t :: %__MODULE__{
           name: String.t(),
-          score: integer()
+          score: integer(),
+          pid: pid()
         }
 
   defstruct name: "Bob",
-            score: 0
+            score: 0,
+            pid: nil
 end

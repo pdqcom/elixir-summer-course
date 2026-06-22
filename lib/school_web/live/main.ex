@@ -11,7 +11,13 @@ defmodule SchoolWeb.MainLive do
   def mount(_params, _session, socket) do
     package = Logic.generate_package()
 
+    Phoenix.PubSub.subscribe(School.PubSub, "game_room")
+
     Process.send(self(), :update_rules, [])
+
+    if connected?(socket) do
+      State.add_player(self())
+    end
 
     new_socket =
       socket
@@ -22,6 +28,7 @@ defmodule SchoolWeb.MainLive do
       |> assign(:game_state, :in_progress)
       |> assign(:rule_descriptions, [])
       |> assign(:score, 0)
+      |> assign(:player_list, [])
 
     {:ok, new_socket}
   end
@@ -79,6 +86,14 @@ defmodule SchoolWeb.MainLive do
       |> assign(:active_rules, active_rules)
 
     Process.send_after(self(), :update_rules, 5_000)
+
+    {:noreply, new_socket}
+  end
+
+  def handle_info({:update_player_list, updated_player_list}, socket) do
+    new_socket =
+      socket
+      |> assign(:player_list, updated_player_list)
 
     {:noreply, new_socket}
   end

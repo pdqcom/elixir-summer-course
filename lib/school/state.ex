@@ -19,7 +19,7 @@ defmodule School.State do
   ]
 
   defstruct active_rules: [],
-            player: %Player{}
+            players: []
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
@@ -28,6 +28,10 @@ defmodule School.State do
   @impl true
   def init(state) do
     {:ok, state}
+  end
+
+  def add_player(pid) do
+    GenServer.call(__MODULE__, {:add_player, pid})
   end
 
   def set_random_rule do
@@ -76,6 +80,44 @@ defmodule School.State do
     new_state = Map.put(state, :player, updated_player)
 
     {:reply, {new_score, decision}, new_state}
+  end
+
+  @impl true
+  def handle_call({:add_player, pid}, _from, state) do
+    Process.monitor(pid)
+
+    new_player = %Player{
+      pid: pid,
+      name: inspect(pid)
+    }
+
+    updated_player_list = [new_player | state.players]
+    new_state = Map.put(state, :players, updated_player_list)
+
+    Phoenix.PubSub.broadcast(
+      School.PubSub,
+      "game_room",
+      {:update_player_list, updated_player_list}
+    )
+
+    {:reply, new_player, new_state}
+  end
+
+  # handle killed PID
+  # {:DOWN, #Reference<0.4092222473.1123811329.133049>, :process, #PID<0.664.0>, {:shutdown, :closed}}
+  @impl true
+  def handle_info({:DOWN, _, _, pid, _}, state) do
+    player_list = state.players
+    updated_player_list = Enum.reject(player_list, fn player -> player.pid == pid end)
+    new_state = Map.put(state, :players, updated_player_list)
+
+    Phoenix.PubSub.broadcast(
+      School.PubSub,
+      "game_room",
+      {:update_player_list, updated_player_list}
+    )
+
+    {:noreply, new_state}
   end
 
   defp maybe_activate_random_rule(state) do
