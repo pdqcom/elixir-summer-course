@@ -42,8 +42,8 @@ defmodule School.State do
     GenServer.call(__MODULE__, :get_active_rules)
   end
 
-  def update_player_score(package, expected) do
-    GenServer.call(__MODULE__, {:update_player_score, package, expected})
+  def update_player_score(pid, package, expected) do
+    GenServer.call(__MODULE__, {:update_player_score, pid, package, expected})
   end
 
   @impl true
@@ -59,11 +59,12 @@ defmodule School.State do
   end
 
   @impl true
-  def handle_call({:update_player_score, package, expected}, _from, state) do
-    {validation_result, _validation_msg} =
-      Logic.validate(package, state.active_rules)
+  def handle_call({:update_player_score, pid, package, expected}, _from, state) do
+    {[player], remaining_players} =
+      Enum.split_with(state.players, fn player -> player.pid == pid end)
 
-    player = state.player
+    {validation_result, validation_msg} =
+      Logic.validate(package, state.active_rules)
 
     decision =
       if validation_result == expected,
@@ -71,15 +72,25 @@ defmodule School.State do
         else: :incorrect
 
     score_delta =
-      if decision == :correct, do: 1, else: -1
+      if decision == :correct,
+        do: 1,
+        else: -1
 
     new_score = max(player.score + score_delta, 0)
 
     updated_player = Map.put(player, :score, new_score)
 
-    new_state = Map.put(state, :player, updated_player)
+    updated_player_list = [updated_player | remaining_players]
 
-    {:reply, {new_score, decision}, new_state}
+    Phoenix.PubSub.broadcast(
+      School.PubSub,
+      "game_room",
+      {:update_player_list, sort_by_score(updated_player_list)}
+    )
+
+    new_state = Map.put(state, :players, updated_player_list)
+
+    {:reply, {updated_player, decision, validation_msg}, new_state}
   end
 
   @impl true
@@ -140,5 +151,9 @@ defmodule School.State do
       Map.put(state, :active_rules, [new_rule | active_rules])
 
     new_state
+  end
+
+  defp sort_by_score(player_list) do
+    Enum.sort(player_list, fn p1, p2 -> p1.score > p2.score end)
   end
 end

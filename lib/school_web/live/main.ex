@@ -35,30 +35,35 @@ defmodule SchoolWeb.MainLive do
 
   @impl true
   def handle_event("approve", _params, socket) do
-    package = socket.assigns.package
-    {new_score, decision} = School.State.update_player_score(package, :invalid)
-
-    new_socket =
-      "swipe-right"
-      |> validation(socket)
-      |> assign(:score, new_score)
-      |> assign(:validation_result, decision)
+    new_socket = validation("swipe-left", :invalid, socket)
 
     {:noreply, new_socket}
   end
 
   @impl true
   def handle_event("decline", _params, socket) do
-    package = socket.assigns.package
-    {new_score, decision} = School.State.update_player_score(package, :valid)
-
-    new_socket =
-      "swipe-left"
-      |> validation(socket)
-      |> assign(:score, new_score)
-      |> assign(:validation_result, decision)
+    new_socket = validation("swipe-right", :valid, socket)
 
     {:noreply, new_socket}
+  end
+
+  defp validation(swipe_direction, expected, socket) do
+    package = socket.assigns.package
+
+    {updated_player, decision, validation_msg} =
+      State.update_player_score(self(), package, expected)
+
+    new_socket =
+      socket
+      |> assign(:validation_result, decision)
+      |> assign(:validation_msg, validation_msg)
+      |> assign(:local_player, updated_player)
+      |> assign(:score, updated_player.score)
+      |> push_event(swipe_direction, %{})
+
+    Process.send_after(self(), :next_package, 1_000)
+
+    new_socket
   end
 
   @impl true
@@ -96,14 +101,5 @@ defmodule SchoolWeb.MainLive do
       |> assign(:player_list, updated_player_list)
 
     {:noreply, new_socket}
-  end
-
-  defp validation(swipe_direction, socket) do
-    new_socket =
-      push_event(socket, swipe_direction, %{})
-
-    Process.send_after(self(), :next_package, 1_000)
-
-    new_socket
   end
 end
