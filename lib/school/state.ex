@@ -17,9 +17,11 @@ defmodule School.State do
     :rule9,
     :rule10
   ]
+  @max_game_time_seconds 240
 
   defstruct active_rules: [],
-            players: []
+            players: [],
+            current_game_time: 0
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %__MODULE__{}, name: __MODULE__)
@@ -27,6 +29,7 @@ defmodule School.State do
 
   @impl true
   def init(state) do
+    Process.send(self(), :tick, [])
     {:ok, state}
   end
 
@@ -114,6 +117,45 @@ defmodule School.State do
     {:reply, new_player, new_state}
   end
 
+  @impl true
+  def handle_info(:tick, state) do
+    Process.send_after(self(), :tick, 1_000)
+
+    current_game_time = state.current_game_time
+
+    Phoenix.PubSub.broadcast(
+      School.PubSub,
+      "game_room",
+      {:tick_update, current_game_time}
+    )
+
+    state_with_new_rule =
+      if rem(current_game_time, 30) == 0 do
+        Phoenix.PubSub.broadcast(
+          School.PubSub,
+          "game_room",
+          :update_rules
+        )
+
+        maybe_activate_random_rule(state)
+      else
+        state
+      end
+
+    if current_game_time > @max_game_time_seconds do
+      Phoenix.PubSub.broadcast(
+        School.PubSub,
+        "game_room",
+        {:game_ended, :ended}
+      )
+    end
+
+    new_state =
+      Map.put(state_with_new_rule, :current_game_time, current_game_time + 1)
+
+    {:noreply, new_state}
+  end
+
   # handle killed PID
   # {:DOWN, #Reference<0.4092222473.1123811329.133049>, :process, #PID<0.664.0>, {:shutdown, :closed}}
   @impl true
@@ -129,6 +171,10 @@ defmodule School.State do
     )
 
     {:noreply, new_state}
+  end
+
+  def max_game_time do
+    @max_game_time_seconds
   end
 
   defp maybe_activate_random_rule(state) do

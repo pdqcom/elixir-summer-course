@@ -47,25 +47,6 @@ defmodule SchoolWeb.MainLive do
     {:noreply, new_socket}
   end
 
-  defp validation(swipe_direction, expected, socket) do
-    package = socket.assigns.package
-
-    {updated_player, decision, validation_msg} =
-      State.update_player_score(self(), package, expected)
-
-    new_socket =
-      socket
-      |> assign(:validation_result, decision)
-      |> assign(:validation_msg, validation_msg)
-      |> assign(:local_player, updated_player)
-      |> assign(:score, updated_player.score)
-      |> push_event(swipe_direction, %{})
-
-    Process.send_after(self(), :next_package, 1_000)
-
-    new_socket
-  end
-
   @impl true
   def handle_info(:next_package, socket) do
     package = Logic.generate_package()
@@ -74,6 +55,17 @@ defmodule SchoolWeb.MainLive do
       socket
       |> assign(:package, package)
       |> push_event("reset-package-card", %{})
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
+  def handle_info({:tick_update, current_game_time}, socket) do
+    width = build_game_time_loading_bar(current_game_time)
+
+    new_socket =
+      socket
+      |> push_event("timer-tick", %{time: current_game_time, width: width})
 
     {:noreply, new_socket}
   end
@@ -101,5 +93,29 @@ defmodule SchoolWeb.MainLive do
       |> assign(:player_list, updated_player_list)
 
     {:noreply, new_socket}
+  end
+
+  defp validation(swipe_direction, expected, socket) do
+    package = socket.assigns.package
+
+    {updated_player, decision, validation_msg} =
+      State.update_player_score(self(), package, expected)
+
+    new_socket =
+      socket
+      |> assign(:validation_result, decision)
+      |> assign(:validation_msg, validation_msg)
+      |> assign(:local_player, updated_player)
+      |> assign(:score, updated_player.score)
+      |> push_event(swipe_direction, %{})
+
+    Process.send_after(self(), :next_package, 1_000)
+
+    new_socket
+  end
+
+  def build_game_time_loading_bar(game_time) do
+    max_game_time = State.max_game_time()
+    game_time / max_game_time * 100
   end
 end
