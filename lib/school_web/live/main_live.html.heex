@@ -13,10 +13,8 @@
   <%= if @local_player && @game_state == :in_progress do %>
     <section class="inspection-area">
       <.score_banner player_name={@local_player.name} score={@score} />
-      
-<!-- 
-        <.match_time_remaining />
-      -->
+
+      <.match_time_remaining />
 
       <.package_inspection_form
         package={@package}
