@@ -13,7 +13,8 @@ defmodule SchoolWeb.MainLive do
 
     Phoenix.PubSub.subscribe(School.PubSub, "game_room")
 
-    Process.send(self(), :update_rules, [])
+    active_rules = State.get_active_rules()
+    rule_descriptions = Logic.descriptions_by_rules(active_rules)
 
     if connected?(socket) do
       State.add_player(self())
@@ -26,7 +27,8 @@ defmodule SchoolWeb.MainLive do
       |> assign(:timestamp, nil)
       |> assign(:validation_result, :correct)
       |> assign(:game_state, :in_progress)
-      |> assign(:rule_descriptions, [])
+      |> assign(:active_rules, active_rules)
+      |> assign(:rule_descriptions, rule_descriptions)
       |> assign(:score, 0)
       |> assign(:player_list, [])
 
@@ -72,8 +74,6 @@ defmodule SchoolWeb.MainLive do
 
   @impl true
   def handle_info(:update_rules, socket) do
-    State.set_random_rule()
-
     active_rules = State.get_active_rules()
     rule_descriptions = Logic.descriptions_by_rules(active_rules)
 
@@ -81,8 +81,6 @@ defmodule SchoolWeb.MainLive do
       socket
       |> assign(:rule_descriptions, rule_descriptions)
       |> assign(:active_rules, active_rules)
-
-    Process.send_after(self(), :update_rules, 5_000)
 
     {:noreply, new_socket}
   end
