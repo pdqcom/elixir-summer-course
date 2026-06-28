@@ -9,5 +9,7 @@ defmodule School.Player do
   defstruct name: nil,
             score: 0,
             pid: nil,
-            ready?: false
+            ready?: false,
+            ezic_contract: false,
+            custom_rules: []
 end

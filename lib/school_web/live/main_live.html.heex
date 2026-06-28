@@ -12,7 +12,12 @@
   <!-- COLUMN 1: CARD -->
   <%= if @local_player && @game_state == :in_progress do %>
     <section class="inspection-area">
-      <.score_banner player_name={@local_player.name} score={@score} />
+      <%= if @local_player && @game_state == :in_progress &&@local_player.ezic_contract do %>
+          <.score_banner2 player_name={@local_player.name} score={@score} />
+      <% else %>
+          <.score_banner player_name={@local_player.name} score={@score} />
+      <% end %>
+      
 
       <.match_time_remaining />
 

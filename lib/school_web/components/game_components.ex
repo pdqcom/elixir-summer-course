@@ -22,6 +22,29 @@ defmodule SchoolWeb.GameComponents do
     </div>
     """
   end
+  def score_banner2(assigns) do
+    ~H"""
+    <div class="player-score-bar">
+      <div class="player-identity">
+        <div class="player-avatar">MK</div>
+        <div>
+          <div class="player-name">Inspector {@player_name}</div>
+          <div class="player-role">Senior Postal Officer</div>
+        </div>
+      </div>
+      <div class="score-display">
+        <span class="ezic-score-label">Ezic Score</span>
+        <span class="ezic-score-value">{@score}</span>
+        <span class="ezic-score-unit">tokens</span>
+      </div>
+      <div class="score-display">
+        <span class="score-label">Score</span>
+        <span class="score-value">{@score}</span>
+        <span class="score-unit">pts</span>
+      </div>
+    </div>
+    """
+  end
 
   def match_time_remaining(assigns) do
     ~H"""
