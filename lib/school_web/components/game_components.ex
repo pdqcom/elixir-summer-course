@@ -289,6 +289,19 @@ defmodule SchoolWeb.GameComponents do
     """
   end
 
+  def punish_overlay(assigns) do
+    ~H"""
+    <div class="match-end-overlay" style="display:flex">
+      <div class="match-end-card" style="background: var(--danger-bg); border: 2px solid var(--stamp-red);">
+        <div class="match-end-label" style="color: var(--stamp-red);">Alert</div>
+        <div class="match-end-title" style="color: var(--stamp-red);">You Have Been Sabotaged!</div>
+        <p style="margin-bottom: 24px; color: var(--ink); font-size: 14px; font-weight: 500;">A new rule has been added to your regulations.</p>
+        <button phx-click="close_punish_popup" class="btn-new-match" style="background: var(--stamp-red);">Continue</button>
+      </div>
+    </div>
+    """
+  end
+
   attr :player_list, :list, required: true
 
   def match_end_overlay(assigns) do
