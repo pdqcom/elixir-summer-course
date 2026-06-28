@@ -86,7 +86,7 @@ defmodule School.State do
       Enum.split_with(state.players, fn player -> player.pid == pid end)
 
     {validation_result, validation_msg} =
-      Logic.validate(package, state.active_rules)
+      Logic.validate(package, state.active_rules ++ player.custom_rules)
 
     decision =
       if validation_result == expected,

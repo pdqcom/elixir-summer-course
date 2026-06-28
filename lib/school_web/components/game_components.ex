@@ -277,6 +277,9 @@ defmodule SchoolWeb.GameComponents do
             <div class="lb-player-name">{player.name}</div>
           </div>
           <div class="lb-player-score">{player.score}</div>
+          <button phx-click="punish_player" phx-value-name={player.name} style="width: 24px; height: 24px; border-radius: 4px; background-color: var(--paper-line); border: 1px solid var(--ink-muted); margin-left: 8px; cursor: pointer; transition: background-color 0.2s; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: var(--ink-soft);" aria-label="close">
+            X
+          </button>
         </li>
       </ul>
     </div>

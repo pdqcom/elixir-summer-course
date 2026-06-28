@@ -68,6 +68,17 @@ defmodule SchoolWeb.MainLive do
   end
 
   @impl true
+  def handle_event("punish_player", %{"name" => name}, socket) do
+    player = Enum.find(socket.assigns.player_list, fn p -> p.name == name end)
+
+    if player && player.pid do
+      send(player.pid, :punish)
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(:next_package, socket) do
     package = Logic.generate_package()
 
@@ -125,6 +136,28 @@ defmodule SchoolWeb.MainLive do
     new_socket =
       socket
       |> assign(:player_list, updated_player_list)
+
+    {:noreply, new_socket}
+  end
+
+  @impl true
+  def handle_info(:punish, socket) do
+    active_rules = socket.assigns.active_rules
+    available_rules = [:rule1, :rule2, :rule3, :rule4, :rule5, :rule6, :rule7, :rule8, :rule9, :rule10]
+
+    possible_new_rules = available_rules -- active_rules
+
+    new_socket =
+      if length(possible_new_rules) > 0 do
+        fake_rule = Enum.random(possible_new_rules)
+        new_active_rules = [fake_rule | active_rules]
+
+        socket
+        |> assign(:active_rules, new_active_rules)
+        |> assign(:rule_descriptions, School.Logic.descriptions_by_rules(new_active_rules))
+      else
+        socket
+      end
 
     {:noreply, new_socket}
   end
