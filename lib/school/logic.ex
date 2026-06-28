@@ -15,6 +15,15 @@ defmodule School.Logic do
   }
 
   def generate_package do
+    number = :rand.uniform(100)
+    if number > 70 do
+      generate_ezic_package()
+    else
+      generate_real_package()
+    end
+  end
+
+  def generate_real_package do
     type = Enum.random([:letter, :parcel, :fragile])
     weight = calculate_weight(type)
     destination = Enum.random([:domestic, :eu, :international])
@@ -33,6 +42,11 @@ defmodule School.Logic do
       has_fragile_sticker: has_fragile_sticker,
       has_customs_form: has_customs_form,
       has_insurance: has_insurance
+    }
+  end
+  def generate_ezic_package do
+    %Package{
+      is_ezic: true
     }
   end
 

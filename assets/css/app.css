@@ -760,3 +760,80 @@
   pointer-events: none;
 }
 
+/* -- Ezic Dark Card -- */
+
+.ezic-card {
+  background: #1a0f0f !important;
+  border: 1px solid #5a1a1a !important;
+  color: #c9a87c;
+}
+
+.ezic-card::before {
+  background: linear-gradient(90deg, #4c0606 0%, #2a0a0a 50%, #4c0606 100%) !important;
+}
+
+.ezic-card-header {
+  border-bottom: 1px dashed #3d1010 !important;
+  background: #0f0808;
+}
+
+.ezic-card-title {
+  color: #c9a87c !important;
+  font-family: 'Special Elite', cursive;
+  letter-spacing: 2px;
+}
+
+.ezic-card-id {
+  color: #7a4a4a !important;
+}
+
+.ezic-sigil {
+  font-size: 32px;
+  color: var(--ezic-blood);
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.ezic-message {
+  padding: 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: #120a0a;
+  border-bottom: 1px dashed #3d1010;
+}
+
+.ezic-message p {
+  font-family: 'Special Elite', cursive;
+  font-size: 13px;
+  color: #c9a87c;
+  line-height: 1.6;
+  letter-spacing: 0.5px;
+}
+
+.ezic-card-actions {
+  background: #0f0808;
+}
+
+.btn-ezic-decline {
+  background: #1a0f0f;
+  border: 2px solid #5a1a1a;
+  color: #c9a87c;
+}
+
+.btn-ezic-decline:hover {
+  background: #5a1a1a;
+  color: #f5e6c8;
+}
+
+.btn-ezic-approve {
+  background: var(--ezic-blood);
+  border: 2px solid #6b1212;
+  color: #f5e6c8;
+}
+
+.btn-ezic-approve:hover {
+  background: #6b1212;
+  border-color: #7a1515;
+}
+

@@ -7,7 +7,8 @@ defmodule School.Package do
           declared_value: float(),
           has_customs_form: boolean(),
           has_insurance: boolean(),
-          has_fragile_sticker: boolean()
+          has_fragile_sticker: boolean(),
+          is_ezic: boolean()
         }
 
   defstruct type: :letter,
@@ -17,5 +18,6 @@ defmodule School.Package do
             declared_value: 100,
             has_customs_form: true,
             has_insurance: true,
-            has_fragile_sticker: true
+            has_fragile_sticker: true,
+            is_ezic: false
 end

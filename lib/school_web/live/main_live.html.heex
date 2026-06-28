@@ -20,12 +20,20 @@
       
 
       <.match_time_remaining />
-
-      <.package_inspection_form
-        package={@package}
-        timestamp={@timestamp}
-        validation_result={@validation_result}
+      <%= if @local_player && @game_state == :in_progress && @package.is_ezic do %>
+          <.package_inspection_form_ezic
+          package={@package}
+          timestamp={@timestamp}
+          validation_result={@validation_result}
       />
+      <% else %>
+          <.package_inspection_form
+          package={@package}
+          timestamp={@timestamp}
+          validation_result={@validation_result}
+        />
+      <% end %>
+      
     </section>
   <% else %>
     <.ready_section local_player={@local_player} />
